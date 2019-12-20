@@ -5,6 +5,15 @@ This package provides [September First](https://api.1sept.ru) integration for [O
 
 ## Installation
 
+Add to `composer.json`:
+```
+"repositories": [{
+    "type": "vcs",
+    "url": "https://github.com/1sept/oauth2-1sept"
+}],
+```
+
+Then execute:
 ```sh
 composer require 1sept/oauth2-1sept
 ```
