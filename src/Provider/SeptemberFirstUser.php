@@ -7,7 +7,7 @@ use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 class SeptemberFirstUser implements ResourceOwnerInterface
 {
     /**
-     * Массив с данными о пользователе
+     * @var array Массив с данными о пользователе
      */
     protected $data;
 
@@ -57,11 +57,24 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * ID пользователя
+     * ID пользователя (UUID)
+     *
+     * @return string
      */
-    public function getId(): ?string
+    public function getId(): string
     {
         return $this->getField('id');
+    }
+
+    /**
+     * Устаревшие ID пользователя (UUID)
+     * Эти ID остаются после объединения уч. записей.
+     *
+     * @return array<string>
+     */
+    public function getIdAlt(): array
+    {
+        return $this->getField('id_alt') ?? [];
     }
 
     /**
