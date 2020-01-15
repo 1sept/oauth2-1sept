@@ -4,6 +4,9 @@ namespace Sept\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 
+/**
+ * Пользователь Первого сентября
+ */
 class SeptemberFirstUser implements ResourceOwnerInterface
 {
     /**
@@ -11,47 +14,17 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     protected $data;
 
-    /**
-     * Конструктор
-     */
     public function __construct(array $response)
     {
         $this->data = $response;
     }
 
     /**
-     * Значение массива (многомерного)
-     *
-     * @param string $key Ключ поля (например: `email` или `name.first` — вложенность оформляется точкой)
-     * @return mixed|null
-     */
-    public static function getFieldFromArray(string $key, ?array $array)
-    {
-        if (strpos($key, '.')) { // key.subKey.subSubKey
-            list ($key, $subKey) = explode('.', $key, 2);
-            return isset($array[$key]) ? static::getFieldFromArray($subKey, $array[$key]) : null;
-        }
-
-        return isset($array[$key]) ? $array[$key] : null;
-    }
-
-    /**
-     * Элемент массива данных о пользователе
-     *
-     * @param string $key Ключ поля (например: email или name.first — вложенность оформляется точкой)
-     * @return mixed|null
-     */
-    protected function getField(string $key)
-    {
-        return static::getFieldFromArray($key, $this->data);
-    }
-
-    /**
-     * Данные о пользователе в виде массива
+     * Массив с данными о пользователе
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return $this->data;
     }
@@ -60,6 +33,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * ID пользователя (UUID)
      *
      * @return string
+     * @example '1cc1632f-2349-4d00-8302-5c4c188469cc'
      */
     public function getId(): string
     {
@@ -68,7 +42,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
 
     /**
      * Устаревшие ID пользователя (UUID)
-     * Эти ID остаются после объединения уч. записей.
+     * (остаются после объединения уч. записей)
      *
      * @return array<string>
      */
@@ -78,7 +52,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Фамилия
+     *
+     * @var string|null
      */
     public function getLastName(): ?string
     {
@@ -86,7 +62,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Имя
+     *
+     * @var string|null
      */
     public function getFirstName(): ?string
     {
@@ -94,7 +72,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Отчество
+     *
+     * @var string|null
      */
     public function getMiddleName(): ?string
     {
@@ -102,7 +82,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Девичья фамилия пользователя (только для женского пола)
+     * Девичья фамилия
      *
      * @return string|null
      */
@@ -112,7 +92,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Отображаемое имя
+     *
+     * @return string|null
      */
     public function getDisplayName(): ?string
     {
@@ -120,7 +102,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Пол
+     *
+     * @return 'male'|'female'|null
      */
     public function getSex(): ?string
     {
@@ -128,7 +112,19 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Умер
+     *
+     * @return bool|null
+     */
+    public function isDied(): ?bool
+    {
+        return $this->getField('is_died');
+    }
+
+    /**
+     * Эл. адрес
+     *
+     * @return string|null
      */
     public function getEmail(): ?string
     {
@@ -136,7 +132,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Дата рождения
+     *
+     * @return \DateTime|null
      */
     public function getBirthday(): ?\DateTime
     {
@@ -144,7 +142,10 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * URL картинки
+     *
+     * @param bool $rejectEmptyAvatar Если true, то пустые аватарки (заглушки) не отдаются
+     * @return string|null
      */
     public function getAvatarUrl(bool $rejectEmptyAvatar = false): ?string
     {
@@ -167,11 +168,13 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * {@inheritdoc}
+     * URL публичной страницы профиля
+     *
+     * @return string|null
      */
     public function getProfileUrl(): ?string
     {
-        return $this->getField('profile_url');
+        return $this->getField('link');
     }
 
     /**
@@ -181,27 +184,55 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getPhone(): ?string
     {
-        return null;
+        return $this->getField('phone');
     }
 
     /**
-     * Локаль
+     * Локаль (языковые и др. настройки)
      *
      * @return string|null
+     * @example ru_RU
      */
     public function getLocale(): ?string
     {
-        return null;
+        return $this->getField('locale');
     }
 
     /**
-     * Имя временной зоны (от -24 до 24)
-     * @example Europe/Moscow
+     * Имя временной зоны
      *
      * @return string|null
+     * @example Europe/Moscow
      */
     public function getTimezone(): ?string
     {
         return $this->getField('timezone');
+    }
+
+    /**
+     * Элемент массива данных о пользователе
+     *
+     * @param string $key Ключ поля (например: email или name.first — вложенность оформляется точкой)
+     * @return mixed|null
+     */
+    protected function getField(string $key)
+    {
+        return static::getFieldFromArray($key, $this->data);
+    }
+
+    /**
+     * Значение массива (многомерного)
+     *
+     * @param string $key Ключ поля (например: `email` или `name.first` — вложенность оформляется точкой)
+     * @return mixed|null
+     */
+    public static function getFieldFromArray(string $key, ?array $array)
+    {
+        if (strpos($key, '.')) { // key.subKey.subSubKey
+            list ($key, $subKey) = explode('.', $key, 2);
+            return isset($array[$key]) ? static::getFieldFromArray($subKey, $array[$key]) : null;
+        }
+
+        return isset($array[$key]) ? $array[$key] : null;
     }
 }
