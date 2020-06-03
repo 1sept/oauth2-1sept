@@ -9,6 +9,8 @@ use League\OAuth2\Client\Provider\ResourceOwnerInterface;
  */
 class SeptemberFirstUser implements ResourceOwnerInterface
 {
+    const AVATAR_BASE = 'https://avatar.1sept.ru';
+
     /**
      * @var array Массив с данными о пользователе
      */
@@ -142,29 +144,90 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * URL картинки
+     * URL аватарки (150x150)
      *
-     * @param bool $rejectEmptyAvatar Если true, то пустые аватарки (заглушки) не отдаются
+     * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
      * @return string|null
      */
-    public function getAvatarUrl(bool $rejectEmptyAvatar = false): ?string
+    public function getAvatarUrl(bool $addVersion = true): ?string
     {
-        if (empty($this->data['avatar']) or ((!isset($this->data['has_avatar']) or !$this->data['has_avatar']) and $rejectEmptyAvatar)) {
-            return null;
-        }
-
-        return $this->getField('avatar');
+        return $this->getField('avatar') . ($addVersion ? $this->getAvatarVersionQuery() : '');
     }
 
     /**
-     * Адрес аватарки 50x50
+     * URL аватарки определённого размера (<img src="…" width="size" height="size">)
      *
-     * @param bool $rejectEmptyAvatar Если true, то пустые аватарки (заглушки) не отдаются
+     * @param int $size Размер от 1 до 1990 ($size x $size — квадрат)
+     * @param int $ratioMultiplier Множитель разрешения картинки: 1 (по умолчанию), 2 или 3
+     * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
      * @return string|null
      */
-    public function getAvatar50Url(bool $rejectEmptyAvatar = false): ?string
+    public function getAvatarSizeUrl(int $size, int $ratioMultiplier = 1, bool $addVersion = true): ?string
     {
-        return $this->getAvatarUrl($rejectEmptyAvatar);
+        $ratio = ($ratioMultiplier > 1) ? '@' . $ratioMultiplier . 'x' : '';
+        $url = static::AVATAR_BASE .'/'. $this->getId() . ($size ? '.' : '') . $size . $ratio . '.jpeg';
+        return $url . ($addVersion ? $this->getAvatarVersionQuery() : '');
+    }
+
+    /**
+     * URL аватарки для экранов разных разрешений (<img srcset="…" width="size" height="size">)
+     *
+     * @param int $size Размер от 1 до 1990 ($size x $size — квадрат)
+     * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
+     * @return string
+     */
+    public function getAvatarSetSizeUrl(int $size, bool $addVersion = true): string
+    {
+        return $this->getAvatarSizeUrl($size, 1, $addVersion) . ' 1x, '
+             . $this->getAvatarSizeUrl($size, 2, $addVersion) . ' 2x, '
+             . $this->getAvatarSizeUrl($size, 3, $addVersion) . ' 3x';
+    }
+
+    /**
+     * URL аватарки c максимальным размером
+     *
+     * @param bool $useVersion Использовать версию аватарки для улучшенного кэширования
+     * @return string|null
+     */
+    public function getAvatarMaxUrl(bool $addVersion = false): ?string
+    {
+        return $this->getField('avatar_max') . ($addVersion ? $this->getAvatarVersionQuery() : '');
+    }
+
+    /**
+     * Версия аватарки
+     * Изменение версии сигнализирует об обновлении аватарки.
+     *
+     * @return int | null
+     */
+
+    public function getAvatarVersion(): ?int
+    {
+        return $this->getField('avatar_version');
+    }
+
+    /**
+     * Является ли аватарка заглушкой
+     *
+     * @return boolean
+     */
+    public function isDefaultAvatar(): bool
+    {
+        return $this->getField('avatar_default');
+    }
+
+    /**
+     * Query cтрока c версией аватарки (улучшает кэширование)
+     *
+     * @return string
+     */
+    public function getAvatarVersionQuery(): string
+    {
+        $url = '';
+        if ($version = $this->getField('avatar_version')) {
+            $url .= '?v=' . $version;
+        }
+        return $url;
     }
 
     /**
