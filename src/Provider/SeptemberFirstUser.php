@@ -213,7 +213,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function isDefaultAvatar(): bool
     {
-        return $this->getField('avatar_default');
+        return (bool) $this->getField('avatar_default');
     }
 
     /**
