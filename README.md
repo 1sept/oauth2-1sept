@@ -13,7 +13,7 @@ composer require 1sept/oauth2-1sept
 ## Usage
 
 ```php
-$provider = new Sept\OAuth2\Client\Provider\SeptemberFirst([
+$provider = new \Sept\OAuth2\Client\Provider\SeptemberFirstProvider([
     'clientId' => 'client_id',
     'clientSecret' => 'secret',
     'redirectUri' => 'https://example.org/oauth-endpoint',
