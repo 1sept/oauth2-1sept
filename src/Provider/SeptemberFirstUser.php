@@ -273,6 +273,28 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
+     * Почтовый адрес в строку
+     *
+     * @return string|null
+     * @example ул. Гагарина, д.5, кв. 21, Нижний Новгород
+     */
+    public function getAddressInline(): ?string
+    {
+        return $this->getField('address.inline');
+    }
+
+    /**
+     * Почтовый индекс
+     *
+     * @return string|null
+     * @example 123456
+     */
+    public function getAddressPostalcode(): ?string
+    {
+        return $this->getField('address.postal_code');
+    }
+
+    /**
      * Элемент массива данных о пользователе
      *
      * @param string $key Ключ поля (например: email или name.first — вложенность оформляется точкой)
