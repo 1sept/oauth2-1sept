@@ -241,13 +241,23 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Номер телефона
+     * Номера телефонов
+     *
+     * @return array|null
+     */
+    public function getPhones(): ?array
+    {
+        return $this->getField('phones');
+    }
+
+    /**
+     * СНИЛС
      *
      * @return string|null
      */
-    public function getPhone(): ?string
+    public function getSnils(): ?string
     {
-        return $this->getField('phone');
+        return $this->getField('passport.snils');
     }
 
     /**
