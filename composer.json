@@ -13,7 +13,7 @@
         "oauth2",
         "client",
         "authorization",
-        "authorisation",
+        "authorization",
         "1sept"
     ],
     "require": {

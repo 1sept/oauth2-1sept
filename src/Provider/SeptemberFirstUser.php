@@ -148,6 +148,8 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      *
      * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
      * @return string|null
+     * 
+     * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.jpeg?v=12345
      */
     public function getAvatarUrl(bool $addVersion = true): ?string
     {
@@ -170,7 +172,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * URL аватарки для экранов разных разрешений (<img srcset="…" width="size" height="size">)
+     * URL аватарки для экранов разных разрешений (для <img srcset="…" width="size" height="size">)
      *
      * @param int $size Размер от 1 до 1990 ($size x $size — квадрат)
      * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
@@ -188,6 +190,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      *
      * @param bool $useVersion Использовать версию аватарки для улучшенного кэширования
      * @return string|null
+     * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.max.jpeg?v=12345
      */
     public function getAvatarMaxUrl(bool $addVersion = false): ?string
     {
@@ -198,7 +201,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * Версия аватарки
      * Изменение версии сигнализирует об обновлении аватарки.
      *
-     * @return int | null
+     * @return int|null
      */
 
     public function getAvatarVersion(): ?int
@@ -217,23 +220,25 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Query cтрока c версией аватарки (улучшает кэширование)
+     * Query строка c версией аватарки (улучшает кэширование)
      *
      * @return string
+     * @example ?v=12345;
      */
     public function getAvatarVersionQuery(): string
     {
-        $url = '';
+        $query = '';
         if ($version = $this->getField('avatar_version')) {
-            $url .= '?v=' . $version;
+            $query .= '?v=' . $version;
         }
-        return $url;
+        return $query;
     }
 
     /**
      * URL публичной страницы профиля
      *
      * @return string|null
+     * @example https://vk.com/hello
      */
     public function getProfileUrl(): ?string
     {
@@ -244,6 +249,14 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * Номера телефонов
      *
      * @return array|null
+     * @example [
+     *   [
+     *     "canonical" => "+79161234567",
+     *     "number" => "+7 (916) 123-45-67",
+     *     "type" => "mobile"
+     *   ],
+     *   …
+     * ]
      */
     public function getPhones(): ?array
     {
@@ -254,6 +267,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * СНИЛС
      *
      * @return string|null
+     * @example 123-123-123 56
      */
     public function getSnils(): ?string
     {
@@ -283,14 +297,25 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Почтовый адрес в строку
+     * ID страны адреса
      *
      * @return string|null
-     * @example ул. Гагарина, д.5, кв. 21, Нижний Новгород
+     * @example RU
      */
-    public function getAddressInline(): ?string
+    public function getAddressCountryID(): ?string
     {
-        return $this->getField('address.inline');
+        return $this->getField('address.country_id');
+    }
+
+    /**
+     * ID региона страны адреса
+     *
+     * @return string|null
+     * @example MOW
+     */
+    public function getAddressRegionID(): ?string
+    {
+        return $this->getField('address.region_id');
     }
 
     /**
@@ -302,6 +327,83 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     public function getAddressPostalcode(): ?string
     {
         return $this->getField('address.postal_code');
+    }
+
+    /**
+     * Почтовый адрес в строку
+     *
+     * @return string|null
+     * @example ул. Гагарина, д.5, кв. 21, Нижний Новгород
+     */
+    public function getAddressInline(): ?string
+    {
+        return $this->getField('address.inline');
+    }
+
+    /**
+     * ID страны (анкета)
+     *
+     * @return string|null
+     * @example RU
+     */
+    public function getLocationCountryID(): ?string
+    {
+        return $this->getField('location.country_id');
+    }
+
+    /**
+     * Название страны (анкета)
+     *
+     * @return string|null
+     * @example Россия
+     */
+    public function getLocationCountryName(): ?string
+    {
+        return $this->getField('location.country_name');
+    }
+
+    /**
+     * Название страны по английски (анкета)
+     *
+     * @return string|null
+     * @example Russia
+     */
+    public function getLocationCountryNameEnglish(): ?string
+    {
+        return $this->getField('location.country_name_eng');
+    }
+
+    /**
+     * ID региона страны (анкета)
+     *
+     * @return string|null
+     * @example MOW
+     */
+    public function getLocationRegionID(): ?string
+    {
+        return $this->getField('location.region_id');
+    }
+
+    /**
+     * Название региона страны (анкета)
+     *
+     * @return string|null
+     * @example Москва
+     */
+    public function getLocationRegionName(): ?string
+    {
+        return $this->getField('location.region_name');
+    }
+
+    /**
+     * Название региона страны по английски (анкета)
+     *
+     * @return string|null
+     * @example Moscow
+     */
+    public function getLocationRegionNameEnglish(): ?string
+    {
+        return $this->getField('location.region_name_eng');
     }
 
     /**
