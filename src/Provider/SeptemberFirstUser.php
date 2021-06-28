@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sept\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
@@ -297,6 +299,18 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
+     * ID адреса
+     *
+     * @return int|null
+     * @example 12345
+     */
+    public function getAddressID(): ?int
+    {
+        $id = $this->getField('address.id');
+        return $id ? (int) $id : null;
+    }
+
+    /**
      * ID страны адреса
      *
      * @return string|null
@@ -306,7 +320,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     {
         return $this->getField('address.country_id');
     }
-
+    
     /**
      * ID региона страны адреса
      *
@@ -317,7 +331,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     {
         return $this->getField('address.region_id');
     }
-
+    
     /**
      * Почтовый индекс
      *
@@ -330,7 +344,106 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Почтовый адрес в строку
+     * Район
+     *
+     * @return string|null
+     * @example Октябрьский район
+     */
+    public function getAddressArea(): ?string
+    {
+        return $this->getField('address.area');
+    }
+
+    /**
+     * Город
+     *
+     * @return string|null
+     * @example Муром
+     */
+    public function getAddressCity(): ?string
+    {
+        return $this->getField('address.city');
+    }
+
+    /**
+     * Улица
+     *
+     * @return string|null
+     * @example ул. Профсоюзная
+     */
+    public function getAddressStreet(): ?string
+    {
+        return $this->getField('address.street');
+    }
+
+    /**
+     * Здание, сооружение, дом, владение, объект незавершенного строительства
+     *
+     * @return string|null
+     * @example д. 5
+     */
+    public function getAddressHouse(): ?string
+    {
+        return $this->getField('address.house');
+    }
+
+    /**
+     * Строение
+     *
+     * @return string|null
+     * @example стр. 5
+     */
+    public function getAddressBuilding(): ?string
+    {
+        return $this->getField('address.building');
+    }
+
+    /**
+     * Помещение в пределах здания, сооружения (Квартира, офис, помещение и т.д.)
+     *
+     * @return string|null
+     * @example кв. 1б | оф. 13 | помещ. 17
+     */
+    public function getAddressFlat(): ?string
+    {
+        return $this->getField('address.flat');
+    }
+
+    /**
+     * До востребования
+     *
+     * @return boolean
+     * @example true
+     */
+    public function isAddressGeneralDelivery(): bool
+    {
+        return (bool) $this->getField('address.general_delivery');
+    }
+
+    /**
+     * Абонентский ящик (А/Я)
+     *
+     * @return string|null
+     * @example а/я 123
+     */
+    public function getAddressPostalBox(): ?string
+    {
+        return $this->getField('address.postal_box');
+    }
+
+    /**
+     * Организация по адресу
+     *
+     * @return string|null
+     * @example Школа №5
+     */
+    public function getAddressOrganization(): ?string
+    {
+        return $this->getField('address.organization');
+    }
+
+    /**
+     * Почтовый адрес в строку (без индекса)
      *
      * @return string|null
      * @example ул. Гагарина, д.5, кв. 21, Нижний Новгород

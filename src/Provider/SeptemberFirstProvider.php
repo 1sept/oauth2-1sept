@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sept\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\AbstractProvider;
