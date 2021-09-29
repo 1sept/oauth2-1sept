@@ -116,6 +116,16 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
+     * Регалии
+     *
+     * @return string|null
+     */
+    public function getRegalia(): string|null
+    {
+        return $this->getField('regalia');
+    }
+
+    /**
      * Умер
      *
      * @return bool|null
