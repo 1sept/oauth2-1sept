@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Sept\OAuth2\Client\Provider;
 
-use League\OAuth2\Client\Provider\AbstractProvider;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * Провайдер данных Первого сентября
  */
-class SeptemberFirstProvider extends AbstractProvider
+class SeptemberFirstProvider extends GenericProvider
 {
     use BearerAuthorizationTrait;
 
@@ -32,44 +32,17 @@ class SeptemberFirstProvider extends AbstractProvider
      */
     const API_VERSION = '2.0';
 
-    /**
-     * @inheritDoc
-     */
-    public function getBaseAuthorizationUrl(): string
+    public function __construct(array $options = [], array $collaborators = [])
     {
-        return static::AUTH_BASE.'/oauth/authorize';
-    }
+        $defaultOptions = [
+            'urlAuthorize' => static::AUTH_BASE.'/oauth/authorize',
+            'urlAccessToken' => static::API_BASE.'/oauth/access_token',
+            'urlResourceOwnerDetails' => static::API_BASE.'/'.static::API_VERSION.'/userinfo',
+            'scopes' => ['profile'],
+            'scopeSeparator' => ' ',
+        ];
 
-    /**
-     * @inheritDoc
-     */
-    public function getBaseAccessTokenUrl(array $params): string
-    {
-        return static::API_BASE.'/oauth/access_token';
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getResourceOwnerDetailsUrl(AccessToken $token): string
-    {
-        return static::API_BASE.'/'.static::API_VERSION.'/userinfo';
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getDefaultScopes(): array
-    {
-        return ['profile'];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function getScopeSeparator(): string
-    {
-        return ' ';
+        parent::__construct(array_merge($defaultOptions, $options), $collaborators);
     }
 
     /**
