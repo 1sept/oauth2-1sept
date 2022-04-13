@@ -28,18 +28,38 @@ class SeptemberFirstProvider extends GenericProvider
     const API_BASE = 'https://api.1sept.ru';
 
     /**
-     * @var string Версия API
+     * @var array Разрешения (scopes) по умолчанию
      */
-    const API_VERSION = '2.0';
+    const SCOPES_DEFAULT = ['profile'];
+
+    /**
+     * @var string Разделитель перечня запрашиваемых разрешений
+     */
+    const SCOPES_SEPARATOR = ' ';
+
+    /**
+     * @var string Путь авторизации
+     */
+    const AUTHORIZE_PATH = '/oauth/authorize';
+
+    /**
+     * @var string Путь получения токена
+     */
+    const ACCESS_TOKEN_PATH = '/oauth/access_token';
+
+    /**
+     * @var string Путь получения данных пользователя
+     */
+    const USERINFO_PATH = '/2.0/userinfo';
 
     public function __construct(array $options = [], array $collaborators = [])
     {
         $defaultOptions = [
-            'urlAuthorize' => static::AUTH_BASE.'/oauth/authorize',
-            'urlAccessToken' => static::API_BASE.'/oauth/access_token',
-            'urlResourceOwnerDetails' => static::API_BASE.'/'.static::API_VERSION.'/userinfo',
-            'scopes' => ['profile'],
-            'scopeSeparator' => ' ',
+            'urlAuthorize' => static::AUTH_BASE.static::AUTHORIZE_PATH,
+            'urlAccessToken' => static::API_BASE.static::ACCESS_TOKEN_PATH,
+            'urlResourceOwnerDetails' => static::API_BASE.static::USERINFO_PATH,
+            'scopes' => static::SCOPES_DEFAULT,
+            'scopeSeparator' => static::SCOPES_SEPARATOR,
         ];
 
         parent::__construct(array_merge($defaultOptions, $options), $collaborators);
@@ -50,8 +70,8 @@ class SeptemberFirstProvider extends GenericProvider
      */
     protected function checkResponse(ResponseInterface $response, $data): void
     {
-        if (!empty($data['error'])) {
-            throw new IdentityProviderException($data['error'].': '.$data['message'], null, $response);
+        if (! empty($data['error'])) {
+            throw new IdentityProviderException($data['error'].': '.$data['message'], 0, $response);
         }
     }
 
