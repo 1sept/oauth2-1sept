@@ -158,14 +158,13 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     /**
      * URL аватарки (150x150)
      *
-     * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
      * @return string|null
      * 
      * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.jpeg?v=12345
      */
-    public function getAvatarUrl(bool $addVersion = true): ?string
+    public function getAvatarUrl(): ?string
     {
-        return $this->getField('avatar') . ($addVersion ? $this->getAvatarVersionQuery() : '');
+        return $this->getField('avatar');
     }
 
     /**
