@@ -152,19 +152,20 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getBirthday(): ?\DateTime
     {
-        return !empty($this->data['birthday']) ? new \DateTime($this->data['birthday']) : null;
+        return ! empty($this->data['birthday']) ? new \DateTime($this->data['birthday']) : null;
     }
 
     /**
      * URL аватарки (150x150)
      *
+     * @param bool $rejectDefaultAvatar
      * @return string|null
-     * 
+     *
      * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.jpeg?v=12345
      */
-    public function getAvatarUrl(): ?string
+    public function getAvatarUrl(bool $rejectDefaultAvatar = false): ?string
     {
-        return $this->getField('avatar');
+        return ($rejectDefaultAvatar && $this->isDefaultAvatar()) ? null : $this->getField('avatar');
     }
 
     /**
@@ -223,9 +224,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     /**
      * Является ли аватарка заглушкой
      *
-     * @return boolean
+     * @return bool|null
      */
-    public function isDefaultAvatar(): bool
+    public function isDefaultAvatar(): ?bool
     {
         return (bool) $this->getField('avatar_default');
     }
@@ -278,7 +279,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * СНИЛС
      *
      * @return string|null
-     * @example 123-123-123 56
+     * @example 123-456-789 01
      */
     public function getSnils(): ?string
     {
@@ -329,7 +330,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     {
         return $this->getField('address.country_id');
     }
-    
+
     /**
      * ID региона страны адреса
      *
@@ -340,7 +341,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     {
         return $this->getField('address.region_id');
     }
-    
+
     /**
      * Почтовый индекс
      *
