@@ -14,10 +14,13 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     const AVATAR_BASE = 'https://avatar.1sept.ru';
 
     /**
-     * @var array Массив с данными о пользователе
+     * @var mixed[] Массив с данными о пользователе
      */
-    protected $data;
+    protected array $data;
 
+    /**
+     * @param mixed[] $response
+     */
     public function __construct(array $response)
     {
         $this->data = $response;
@@ -26,7 +29,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     /**
      * Массив с данными о пользователе
      *
-     * @return array
+     * @return mixed[]
      */
     public function toArray(): array
     {
@@ -58,7 +61,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     /**
      * Фамилия
      *
-     * @var string|null
+     * @return string|null
      */
     public function getLastName(): ?string
     {
@@ -68,7 +71,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     /**
      * Имя
      *
-     * @var string|null
+     * @return string|null
      */
     public function getFirstName(): ?string
     {
@@ -78,7 +81,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     /**
      * Отчество
      *
-     * @var string|null
+     * @return string|null
      */
     public function getMiddleName(): ?string
     {
@@ -200,8 +203,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     /**
      * URL аватарки c максимальным размером
      *
-     * @param bool $useVersion Использовать версию аватарки для улучшенного кэширования
+     * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
      * @return string|null
+     *
      * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.max.jpeg?v=12345
      */
     public function getAvatarMaxUrl(bool $addVersion = false): ?string
@@ -260,7 +264,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     /**
      * Номера телефонов
      *
-     * @return array|null
+     * @return array<int, array<string, string>>
      * @example [
      *   [
      *     "canonical" => "+79161234567",
@@ -533,9 +537,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * Элемент массива данных о пользователе
      *
      * @param string $key Ключ поля (например: email или name.first — вложенность оформляется точкой)
-     * @return mixed|null
+     * @return mixed
      */
-    protected function getField(string $key)
+    protected function getField(string $key): mixed
     {
         return static::getFieldFromArray($key, $this->data);
     }
@@ -544,9 +548,10 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * Значение массива (многомерного)
      *
      * @param string $key Ключ поля (например: `email` или `name.first` — вложенность оформляется точкой)
-     * @return mixed|null
+     * @param mixed[] $array
+     * @return mixed
      */
-    public static function getFieldFromArray(string $key, ?array $array)
+    public static function getFieldFromArray(string $key, ?array $array): mixed
     {
         if (strpos($key, '.')) { // key.subKey.subSubKey
             list ($key, $subKey) = explode('.', $key, 2);

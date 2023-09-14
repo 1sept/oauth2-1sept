@@ -6,6 +6,7 @@ namespace Sept\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
 use Psr\Http\Message\ResponseInterface;
@@ -28,7 +29,7 @@ class SeptemberFirstProvider extends GenericProvider
     const API_BASE = 'https://api.1sept.ru';
 
     /**
-     * @var array Разрешения (scopes) по умолчанию
+     * @var string[] Разрешения (scopes) по умолчанию
      */
     const SCOPES_DEFAULT = ['profile'];
 
@@ -52,6 +53,12 @@ class SeptemberFirstProvider extends GenericProvider
      */
     const USERINFO_PATH = '/2.0/userinfo';
 
+    /**
+     * Undocumented function
+     *
+     * @param mixed[] $options
+     * @param object[] $collaborators
+     */
     public function __construct(array $options = [], array $collaborators = [])
     {
         $defaultOptions = [
@@ -66,7 +73,13 @@ class SeptemberFirstProvider extends GenericProvider
     }
 
     /**
-     * @inheritDoc
+     * Checks a provider response for errors.
+     *
+     * @param ResponseInterface $response
+     * @param mixed[]|string $data — Parsed response data
+     * @return void
+     *
+     * @throws IdentityProviderException
      */
     protected function checkResponse(ResponseInterface $response, $data): void
     {
@@ -76,7 +89,11 @@ class SeptemberFirstProvider extends GenericProvider
     }
 
     /**
-     * @inheritDoc
+     * Generates a resource owner object from a successful resource owner details request.
+     *
+     * @param mixed[] $response
+     * @param AccessToken $token
+     * @return SeptemberFirstUser
      */
     protected function createResourceOwner(array $response, AccessToken $token): SeptemberFirstUser
     {
