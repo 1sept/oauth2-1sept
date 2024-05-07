@@ -17,7 +17,7 @@
         "1sept"
     ],
     "require": {
-        "php": "^7.3 || ^8",
+        "php": "^8.2",
         "league/oauth2-client": "^2.0"
     },
     "require-dev": {
