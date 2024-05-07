@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Sept\OAuth2\Client\Provider;
 
@@ -155,7 +153,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getBirthday(): ?\DateTime
     {
-        return ! empty($this->data['birthday']) ? new \DateTime($this->data['birthday']) : null;
+        return isset($this->data['birthday']) ? new \DateTime($this->data['birthday']) : null;
     }
 
     /**
@@ -168,7 +166,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAvatarUrl(bool $rejectDefaultAvatar = false): ?string
     {
-        return ($rejectDefaultAvatar && $this->isDefaultAvatar()) ? null : $this->getField('avatar');
+        return ($rejectDefaultAvatar && ($this->isDefaultAvatar() ?? false)) ? null : $this->getField('avatar');
     }
 
     /**
@@ -182,7 +180,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     public function getAvatarSizeUrl(int $size, int $ratioMultiplier = 1, bool $addVersion = true): ?string
     {
         $ratio = ($ratioMultiplier > 1) ? '@' . $ratioMultiplier . 'x' : '';
-        $url = static::AVATAR_BASE .'/'. $this->getId() . ($size ? '.' : '') . $size . $ratio . '.jpeg';
+        $url = static::AVATAR_BASE .'/'. $this->getId() . (((bool) $size)? '.' : '') . $size . $ratio . '.jpeg';
         return $url . ($addVersion ? $this->getAvatarVersionQuery() : '');
     }
 
@@ -244,7 +242,8 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     public function getAvatarVersionQuery(): string
     {
         $query = '';
-        if ($version = $this->getField('avatar_version')) {
+        $version = $this->getField('avatar_version');
+        if ((bool) $version) {
             $query .= '?v=' . $version;
         }
         return $query;
@@ -321,7 +320,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     public function getAddressID(): ?int
     {
         $id = $this->getField('address.id');
-        return $id ? (int) $id : null;
+        return ((bool) $id) ? ((int) $id) : null;
     }
 
     /**
@@ -553,7 +552,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public static function getFieldFromArray(string $key, ?array $array): mixed
     {
-        if (strpos($key, '.')) { // key.subKey.subSubKey
+        if ((bool) strpos($key, '.')) { // key.subKey.subSubKey
             list ($key, $subKey) = explode('.', $key, 2);
             return isset($array[$key]) ? static::getFieldFromArray($subKey, $array[$key]) : null;
         }

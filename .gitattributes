@@ -1,0 +1,43 @@
+# Common settings that generally should always be used with your language specific settings
+
+# Auto detect text files and perform LF normalization
+# http://davidlaing.com/2012/09/19/customise-your-gitattributes-to-become-a-git-ninja/
+# Handle line endings automatically for files detected as text
+# and leave all files detected as binary untouched.
+* text=auto
+
+# Git
+.gitattributes text
+.gitignore text
+.gitconfig text
+.gitmodules text
+
+# source code
+*.php diff=php
+
+*.json text
+*.markdown text
+*.md text
+*.neon.dist text
+*.xml text
+*.xml.dist text
+*README* text
+.editorconfig text
+AUTHORS text
+LICENSE text
+
+# Ignore export
+/.appveyor.yml export-ignore
+/.editorconfig export-ignore
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.github export-ignore
+/.gitignore export-ignore
+/.gitignore export-ignore
+/SECURITY.md export-ignore
+/docs export-ignore
+/phpcs.xml.dist export-ignore
+/phpstan.neon.dist export-ignore
+/phpunit.xml.dist export-ignore
+/psalm.xml.dist export-ignore
+/tests export-ignore

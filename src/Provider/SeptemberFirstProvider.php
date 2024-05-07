@@ -1,12 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Sept\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
-use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
 use Psr\Http\Message\ResponseInterface;
@@ -54,17 +51,20 @@ class SeptemberFirstProvider extends GenericProvider
     const USERINFO_PATH = '/2.0/userinfo';
 
     /**
-     * Undocumented function
+     * Constructor
      *
      * @param mixed[] $options
      * @param object[] $collaborators
      */
     public function __construct(array $options = [], array $collaborators = [])
     {
+        $authBase = $options['authBase'] ?? static::AUTH_BASE;
+        $apiBase  = $options['apiBase']  ?? static::API_BASE;
+
         $defaultOptions = [
-            'urlAuthorize' => static::AUTH_BASE.static::AUTHORIZE_PATH,
-            'urlAccessToken' => static::API_BASE.static::ACCESS_TOKEN_PATH,
-            'urlResourceOwnerDetails' => static::API_BASE.static::USERINFO_PATH,
+            'urlAuthorize' => $authBase.static::AUTHORIZE_PATH,
+            'urlAccessToken' => $apiBase.static::ACCESS_TOKEN_PATH,
+            'urlResourceOwnerDetails' => $apiBase.static::USERINFO_PATH,
             'scopes' => static::SCOPES_DEFAULT,
             'scopeSeparator' => static::SCOPES_SEPARATOR,
         ];
@@ -83,7 +83,7 @@ class SeptemberFirstProvider extends GenericProvider
      */
     protected function checkResponse(ResponseInterface $response, $data): void
     {
-        if (! empty($data['error'])) {
+        if (isset($data['error'])) {
             throw new IdentityProviderException($data['error'].': '.$data['message'], 0, $response);
         }
     }
