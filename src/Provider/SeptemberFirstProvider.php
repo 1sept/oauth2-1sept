@@ -84,7 +84,7 @@ class SeptemberFirstProvider extends GenericProvider
     protected function checkResponse(ResponseInterface $response, $data): void
     {
         if (isset($data['error'])) {
-            throw new IdentityProviderException($data['error'].': '.$data['message'], 0, $response);
+            throw new IdentityProviderException($data['error']. (isset($data['message']) ? ': '.$data['message'] : ''), 0, $response);
         }
     }
 
