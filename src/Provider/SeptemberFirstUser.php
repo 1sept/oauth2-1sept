@@ -162,7 +162,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * @param bool $rejectDefaultAvatar
      * @return string|null
      *
-     * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.jpeg?v=12345
+     * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.webp?v=12345
      */
     public function getAvatarUrl(bool $rejectDefaultAvatar = false): ?string
     {
@@ -175,12 +175,13 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * @param int $size Размер от 1 до 1990 ($size x $size — квадрат)
      * @param int $ratioMultiplier Множитель разрешения картинки: 1 (по умолчанию), 2 или 3
      * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
+     * @param string $format
      * @return string|null
      */
-    public function getAvatarSizeUrl(int $size, int $ratioMultiplier = 1, bool $addVersion = true): ?string
+    public function getAvatarSizeUrl(int $size, int $ratioMultiplier = 1, bool $addVersion = true, string $format = 'webp'): ?string
     {
         $ratio = ($ratioMultiplier > 1) ? '@' . $ratioMultiplier . 'x' : '';
-        $url = static::AVATAR_BASE .'/'. $this->getId() . (((bool) $size)? '.' : '') . $size . $ratio . '.jpeg';
+        $url = static::AVATAR_BASE .'/'. $this->getId() . (((bool) $size)? '.' : '') . $size . $ratio .'.'.$format;
         return $url . ($addVersion ? $this->getAvatarVersionQuery() : '');
     }
 
@@ -189,13 +190,14 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      *
      * @param int $size Размер от 1 до 1990 ($size x $size — квадрат)
      * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
+     * @param string $format
      * @return string
      */
-    public function getAvatarSetSizeUrl(int $size, bool $addVersion = true): string
+    public function getAvatarSetSizeUrl(int $size, bool $addVersion = true, string $format = 'webp'): string
     {
-        return $this->getAvatarSizeUrl($size, 1, $addVersion) . ' 1x, '
-             . $this->getAvatarSizeUrl($size, 2, $addVersion) . ' 2x, '
-             . $this->getAvatarSizeUrl($size, 3, $addVersion) . ' 3x';
+        return $this->getAvatarSizeUrl($size, 1, $addVersion, $format) . ' 1x, '
+             . $this->getAvatarSizeUrl($size, 2, $addVersion, $format) . ' 2x, '
+             . $this->getAvatarSizeUrl($size, 3, $addVersion, $format) . ' 3x';
     }
 
     /**
@@ -204,7 +206,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
      * @return string|null
      *
-     * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.max.jpeg?v=12345
+     * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.max.webp?v=12345
      */
     public function getAvatarMaxUrl(bool $addVersion = false): ?string
     {
