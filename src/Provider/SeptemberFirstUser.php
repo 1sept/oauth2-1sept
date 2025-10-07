@@ -1,15 +1,17 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Sept\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 
 /**
- * Пользователь Первого сентября
+ * Пользователь Первого сентября.
  */
 class SeptemberFirstUser implements ResourceOwnerInterface
 {
-    const AVATAR_BASE = 'https://avatar.1sept.ru';
+    public const string AVATAR_BASE = 'https://avatar.1sept.ru';
 
     /**
      * @var mixed[] Массив с данными о пользователе
@@ -25,7 +27,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Массив с данными о пользователе
+     * Массив с данными о пользователе.
      *
      * @return mixed[]
      */
@@ -35,61 +37,71 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * ID пользователя (UUID)
+     * ID пользователя (UUID).
      *
-     * @return string
      * @example '1cc1632f-2349-4d00-8302-5c4c188469cc'
      */
     public function getId(): string
     {
-        return $this->getField('id');
+        $id = $this->getField('id');
+        \assert(\is_string($id) && '' !== $id, 'ID must be a non-empty string');
+
+        return $id;
     }
 
     /**
      * Устаревшие ID пользователя (UUID)
-     * (остаются после объединения уч. записей)
+     * (остаются после объединения уч. записей).
      *
-     * @return array<string>
+     * @return string[]
      */
     public function getIdAlt(): array
     {
-        return $this->getField('id_alt') ?? [];
+        $altIds = $this->getField('id_alt') ?? [];
+        \assert(\is_array($altIds), 'Atl IDs list must be an array');
+        array_walk($altIds, static function ($id): void {
+            \assert(\is_string($id) && '' !== $id, 'Atl ID must be a non-empty string');
+        });
+
+        /** @var string[] $altIds */
+        return $altIds;
     }
 
     /**
-     * Фамилия
-     *
-     * @return string|null
+     * Фамилия.
      */
     public function getLastName(): ?string
     {
-        return $this->getField('personal_name.surname');
+        $lastName = $this->getField('personal_name.surname');
+        \assert(\is_string($lastName) || null === $lastName, 'Last name must be a string or null');
+
+        return $lastName;
     }
 
     /**
-     * Имя
-     *
-     * @return string|null
+     * Имя.
      */
     public function getFirstName(): ?string
     {
-        return $this->getField('personal_name.name');
+        $firstName = $this->getField('personal_name.name');
+        \assert(\is_string($firstName) || null === $firstName, 'First name must be a string or null');
+
+        return $firstName;
     }
 
     /**
-     * Отчество
-     *
-     * @return string|null
+     * Отчество.
      */
     public function getMiddleName(): ?string
     {
-        return $this->getField('personal_name.patronymic');
+        $middleName = $this->getField('personal_name.patronymic');
+        \assert(\is_string($middleName) || null === $middleName, 'Middle name must be a string or null');
+
+        return $middleName;
     }
 
     /**
-     * Девичья фамилия
-     *
-     * @return string|null
+     * Девичья фамилия.
      */
     public function getMaidenName(): ?string
     {
@@ -97,138 +109,152 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Отображаемое имя
-     *
-     * @return string|null
+     * Отображаемое имя.
      */
     public function getDisplayName(): ?string
     {
-        return $this->getField('display_name');
+        $displayName = $this->getField('display_name');
+        \assert(\is_string($displayName) || null === $displayName, 'Display name must be a string or null');
+
+        return $displayName;
     }
 
     /**
-     * Пол
+     * Пол.
      *
      * @return 'male'|'female'|null
      */
     public function getSex(): ?string
     {
-        return $this->getField('sex');
+        $sex = $this->getField('sex');
+        \assert((\is_string($sex) && \in_array($sex, ['male', 'female'], true)) || null === $sex, 'Sex must be a string or null');
+
+        return $sex;
     }
 
     /**
-     * Регалии
-     *
-     * @return string|null
+     * Регалии.
      */
-    public function getRegalia(): string|null
+    public function getRegalia(): ?string
     {
-        return $this->getField('regalia');
+        $regalia = $this->getField('regalia');
+        \assert(\is_string($regalia) || null === $regalia, 'Regalia must be a string or null');
+
+        return $regalia;
     }
 
     /**
-     * Умер
-     *
-     * @return bool|null
+     * Умер.
      */
     public function isDied(): ?bool
     {
-        return $this->getField('is_died');
+        $isDied = $this->getField('is_died');
+        \assert(\is_bool($isDied) || null === $isDied, 'Death status must be a boolean or null');
+
+        return $isDied;
     }
 
     /**
-     * Эл. адрес
-     *
-     * @return string|null
+     * Эл. адрес.
      */
     public function getEmail(): ?string
     {
-        return $this->getField('email');
+        $email = $this->getField('email');
+        \assert(\is_string($email) || null === $email, 'Email must be a string or null');
+
+        return $email;
     }
 
     /**
-     * Дата рождения
-     *
-     * @return \DateTime|null
+     * Дата рождения.
      */
     public function getBirthday(): ?\DateTime
     {
-        return isset($this->data['birthday']) ? new \DateTime($this->data['birthday']) : null;
+        $birthday = $this->getField('birthday');
+        \assert(\is_string($birthday) || null === $birthday, 'Birthday must be a string or null');
+
+        return null !== $birthday ? new \DateTime($birthday) : null;
     }
 
     /**
-     * URL аватарки (150x150)
-     *
-     * @param bool $rejectDefaultAvatar
-     * @return string|null
+     * URL аватарки (150x150).
      *
      * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.webp?v=12345
      */
     public function getAvatarUrl(bool $rejectDefaultAvatar = false): ?string
     {
-        return ($rejectDefaultAvatar && ($this->isDefaultAvatar() ?? false)) ? null : $this->getField('avatar');
+        if ($rejectDefaultAvatar && ($this->isDefaultAvatar() ?? false)) {
+            return null;
+        }
+
+        $avatar = $this->getField('avatar');
+        \assert(\is_string($avatar) || null === $avatar, 'Avatar must be a string or null');
+
+        return $avatar;
     }
 
     /**
-     * URL аватарки определённого размера (<img src="…" width="size" height="size">)
+     * URL аватарки определённого размера (<img src="…" width="size" height="size">).
      *
-     * @param int $size Размер от 1 до 1990 ($size x $size — квадрат)
-     * @param int $ratioMultiplier Множитель разрешения картинки: 1 (по умолчанию), 2 или 3
-     * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
-     * @param string $format
-     * @return string|null
+     * @param int  $size            Размер от 1 до 1990 ($size x $size — квадрат)
+     * @param int  $ratioMultiplier Множитель разрешения картинки: 1 (по умолчанию), 2 или 3
+     * @param bool $addVersion      Использовать версию аватарки для улучшенного кэширования
      */
     public function getAvatarSizeUrl(int $size, int $ratioMultiplier = 1, bool $addVersion = true, string $format = 'webp'): ?string
     {
         $ratio = ($ratioMultiplier > 1) ? '@' . $ratioMultiplier . 'x' : '';
-        $url = static::AVATAR_BASE .'/'. $this->getId() . (((bool) $size)? '.' : '') . $size . $ratio .'.'.$format;
+        $url = static::AVATAR_BASE . '/' . $this->getId() . (((bool) $size) ? '.' : '') . $size . $ratio . '.' . $format;
+
         return $url . ($addVersion ? $this->getAvatarVersionQuery() : '');
     }
 
     /**
-     * URL аватарки для экранов разных разрешений (для <img srcset="…" width="size" height="size">)
+     * URL аватарки для экранов разных разрешений (для <img srcset="…" width="size" height="size">).
      *
-     * @param int $size Размер от 1 до 1990 ($size x $size — квадрат)
+     * @param int  $size       Размер от 1 до 1990 ($size x $size — квадрат)
      * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
-     * @param string $format
-     * @return string
      */
     public function getAvatarSetSizeUrl(int $size, bool $addVersion = true, string $format = 'webp'): string
     {
         return $this->getAvatarSizeUrl($size, 1, $addVersion, $format) . ' 1x, '
-             . $this->getAvatarSizeUrl($size, 2, $addVersion, $format) . ' 2x, '
-             . $this->getAvatarSizeUrl($size, 3, $addVersion, $format) . ' 3x';
+            . $this->getAvatarSizeUrl($size, 2, $addVersion, $format) . ' 2x, '
+            . $this->getAvatarSizeUrl($size, 3, $addVersion, $format) . ' 3x';
     }
 
     /**
      * URL аватарки c максимальным размером
      *
      * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
-     * @return string|null
      *
      * @example https://avatar.1sept.ru/12121212-3456-7243-2134-432432144221.max.webp?v=12345
      */
     public function getAvatarMaxUrl(bool $addVersion = false): ?string
     {
-        return $this->getField('avatar_max') . ($addVersion ? $this->getAvatarVersionQuery() : '');
+        $avatar = $this->getField('avatar_max');
+        if (null === $avatar) {
+            return null;
+        }
+
+        \assert(\is_string($avatar), 'Avatar must be a string or null');
+
+        return $avatar . ($addVersion ? $this->getAvatarVersionQuery() : '');
     }
 
     /**
-     * Версия аватарки
+     * Версия аватарки.
+     *
      * Изменение версии сигнализирует об обновлении аватарки.
-     *
-     * @return int|null
      */
-
-    public function getAvatarVersion(): ?int
+    public function getAvatarVersion(): int|string|null
     {
-        return $this->getField('avatar_version');
+        $version = $this->getField('avatar_version');
+        \assert(\is_int($version) || \is_string($version) || null === $version, 'Avatar version must be an integer, string or null');
+
+        return $version;
     }
 
     /**
-     * Является ли аватарка заглушкой
-     *
-     * @return bool|null
+     * Является ли аватарка заглушкой.
      */
     public function isDefaultAvatar(): ?bool
     {
@@ -236,36 +262,40 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Query строка c версией аватарки (улучшает кэширование)
+     * Query строка c версией аватарки (улучшает кэширование).
      *
-     * @return string
      * @example ?v=12345;
      */
     public function getAvatarVersionQuery(): string
     {
         $query = '';
-        $version = $this->getField('avatar_version');
-        if ((bool) $version) {
+
+        $version = $this->getAvatarVersion();
+        if (null !== $version) {
             $query .= '?v=' . $version;
         }
+
         return $query;
     }
 
     /**
-     * URL публичной страницы профиля
+     * URL публичной страницы профиля.
      *
-     * @return string|null
      * @example https://vk.com/hello
      */
     public function getProfileUrl(): ?string
     {
-        return $this->getField('link');
+        $link = $this->getField('link');
+        \assert(\is_string($link), 'Link must be a string or null');
+
+        return $link;
     }
 
     /**
-     * Номера телефонов
+     * Номера телефонов.
      *
-     * @return array<int, array<string, string>>
+     * @return array<int, array<string, string>>|null
+     *
      * @example [
      *   [
      *     "canonical" => "+79161234567",
@@ -277,157 +307,185 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getPhones(): ?array
     {
-        return $this->getField('phones');
+        $phones = $this->getField('phones');
+        \assert(\is_array($phones) || null === $phones, 'Phones must be an array or null');
+
+        /** @var array<int, array<string, string>>|null $phones */
+        return $phones;
     }
 
     /**
      * СНИЛС
      *
-     * @return string|null
      * @example 123-456-789 01
      */
     public function getSnils(): ?string
     {
-        return $this->getField('passport.snils');
+        $snils = $this->getField('passport.snils');
+        \assert(\is_string($snils), 'SNILS must be a string or null');
+
+        return $snils;
     }
 
     /**
-     * Локаль (языковые и др. настройки)
+     * Локаль (языковые и др. настройки).
      *
-     * @return string|null
      * @example ru_RU
      */
     public function getLocale(): ?string
     {
-        return $this->getField('locale');
+        $locale = $this->getField('locale');
+        \assert(\is_string($locale), 'Locale must be a string or null');
+
+        return $locale;
     }
 
     /**
-     * Имя временной зоны
+     * Имя временной зоны.
      *
-     * @return string|null
      * @example Europe/Moscow
      */
     public function getTimezone(): ?string
     {
-        return $this->getField('timezone');
+        $timezone = $this->getField('timezone');
+        \assert(\is_string($timezone), 'Timezone must be a string or null');
+
+        return $timezone;
     }
 
     /**
-     * ID адреса
+     * ID адреса.
      *
-     * @return int|null
      * @example 12345
      */
     public function getAddressID(): ?int
     {
         $id = $this->getField('address.id');
-        return ((bool) $id) ? ((int) $id) : null;
+        \assert(\is_int($id) || null === $id, 'ID must be an integer or null');
+
+        return $id;
     }
 
     /**
-     * ID страны адреса
+     * ID страны адреса.
      *
-     * @return string|null
      * @example RU
      */
     public function getAddressCountryID(): ?string
     {
-        return $this->getField('address.country_id');
+        $countryId = $this->getField('address.country_id');
+        \assert(\is_string($countryId) || null === $countryId, 'Country ID must be a string or null');
+
+        return $countryId;
     }
 
     /**
-     * ID региона страны адреса
+     * ID региона страны адреса.
      *
-     * @return string|null
      * @example MOW
      */
     public function getAddressRegionID(): ?string
     {
-        return $this->getField('address.region_id');
+        $regionId = $this->getField('address.region_id');
+        \assert(\is_string($regionId) || null === $regionId, 'Region ID must be a string or null');
+
+        return $regionId;
     }
 
     /**
      * Почтовый индекс
      *
-     * @return string|null
      * @example 123456
      */
     public function getAddressPostalcode(): ?string
     {
-        return $this->getField('address.postal_code');
+        $postalCode = $this->getField('address.postal_code');
+        \assert(\is_string($postalCode) || null === $postalCode, 'Postal code must be a string or null');
+
+        return $postalCode;
     }
 
     /**
-     * Район
+     * Район.
      *
-     * @return string|null
      * @example Октябрьский район
      */
     public function getAddressArea(): ?string
     {
-        return $this->getField('address.area');
+        $area = $this->getField('address.area');
+        \assert(\is_string($area) || null === $area, 'Area must be a string or null');
+
+        return $area;
     }
 
     /**
-     * Город
+     * Город.
      *
-     * @return string|null
      * @example Муром
      */
     public function getAddressCity(): ?string
     {
-        return $this->getField('address.city');
+        $city = $this->getField('address.city');
+        \assert(\is_string($city) || null === $city, 'City must be a string or null');
+
+        return $city;
     }
 
     /**
-     * Улица
+     * Улица.
      *
-     * @return string|null
      * @example ул. Профсоюзная
      */
     public function getAddressStreet(): ?string
     {
-        return $this->getField('address.street');
+        $street = $this->getField('address.street');
+        \assert(\is_string($street) || null === $street, 'Street must be a string or null');
+
+        return $street;
     }
 
     /**
-     * Здание, сооружение, дом, владение, объект незавершенного строительства
+     * Здание, сооружение, дом, владение, объект незавершенного строительства.
      *
-     * @return string|null
      * @example д. 5
      */
     public function getAddressHouse(): ?string
     {
-        return $this->getField('address.house');
+        $house = $this->getField('address.house');
+        \assert(\is_string($house) || null === $house, 'House must be a string or null');
+
+        return $house;
     }
 
     /**
-     * Строение
+     * Строение.
      *
-     * @return string|null
      * @example стр. 5
      */
     public function getAddressBuilding(): ?string
     {
-        return $this->getField('address.building');
+        $building = $this->getField('address.building');
+        \assert(\is_string($building) || null === $building, 'Building must be a string or null');
+
+        return $building;
     }
 
     /**
-     * Помещение в пределах здания, сооружения (Квартира, офис, помещение и т.д.)
+     * Помещение в пределах здания, сооружения (Квартира, офис, помещение и т.д.).
      *
-     * @return string|null
      * @example кв. 1б | оф. 13 | помещ. 17
      */
     public function getAddressFlat(): ?string
     {
-        return $this->getField('address.flat');
+        $flat = $this->getField('address.flat');
+        \assert(\is_string($flat) || null === $flat, 'Flat must be a string or null');
+
+        return $flat;
     }
 
     /**
-     * До востребования
+     * До востребования.
      *
-     * @return boolean
      * @example true
      */
     public function isAddressGeneralDelivery(): bool
@@ -436,129 +494,153 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * Абонентский ящик (А/Я)
+     * Абонентский ящик (А/Я).
      *
-     * @return string|null
      * @example а/я 123
      */
     public function getAddressPostalBox(): ?string
     {
-        return $this->getField('address.postal_box');
+        $postalBox = $this->getField('address.postal_box');
+        \assert(\is_string($postalBox) || null === $postalBox, 'Postal box must be a string or null');
+
+        return $postalBox;
     }
 
     /**
-     * Организация по адресу
+     * Организация по адресу.
      *
-     * @return string|null
      * @example Школа №5
      */
     public function getAddressOrganization(): ?string
     {
-        return $this->getField('address.organization');
+        $organization = $this->getField('address.organization');
+        \assert(\is_string($organization) || null === $organization, 'Organization must be a string or null');
+
+        return $organization;
     }
 
     /**
-     * Почтовый адрес в строку (без индекса)
+     * Почтовый адрес в строку (без индекса).
      *
-     * @return string|null
      * @example ул. Гагарина, д.5, кв. 21, Нижний Новгород
      */
     public function getAddressInline(): ?string
     {
-        return $this->getField('address.inline');
+        $addressInline = $this->getField('address.inline');
+        \assert(\is_string($addressInline) || null === $addressInline, 'Inline must be a string or null');
+
+        return $addressInline;
     }
 
     /**
-     * ID страны (анкета)
+     * ID страны (анкета).
      *
-     * @return string|null
      * @example RU
      */
     public function getLocationCountryID(): ?string
     {
-        return $this->getField('location.country_id');
+        $countryId = $this->getField('location.country_id');
+        \assert(\is_string($countryId) || null === $countryId, 'Country ID must be a string or null');
+
+        return $countryId;
     }
 
     /**
-     * Название страны (анкета)
+     * Название страны (анкета).
      *
-     * @return string|null
      * @example Россия
      */
     public function getLocationCountryName(): ?string
     {
-        return $this->getField('location.country_name');
+        $countryName = $this->getField('location.country_name');
+        \assert(\is_string($countryName) || null === $countryName, 'Country name must be a string or null');
+
+        return $countryName;
     }
 
     /**
-     * Название страны по английски (анкета)
+     * Название страны по английски (анкета).
      *
-     * @return string|null
      * @example Russia
      */
     public function getLocationCountryNameEnglish(): ?string
     {
-        return $this->getField('location.country_name_eng');
+        $countryNameEnglish = $this->getField('location.country_name_eng');
+        \assert(\is_string($countryNameEnglish) || null === $countryNameEnglish, 'Country name (english) must be a string or null');
+
+        return $countryNameEnglish;
     }
 
     /**
-     * ID региона страны (анкета)
+     * ID региона страны (анкета).
      *
-     * @return string|null
      * @example MOW
      */
     public function getLocationRegionID(): ?string
     {
-        return $this->getField('location.region_id');
+        $regionId = $this->getField('location.region_id');
+        \assert(\is_string($regionId) || null === $regionId, 'Region ID must be a string or null');
+
+        return $regionId;
     }
 
     /**
-     * Название региона страны (анкета)
+     * Название региона страны (анкета).
      *
-     * @return string|null
      * @example Москва
      */
     public function getLocationRegionName(): ?string
     {
-        return $this->getField('location.region_name');
+        $regionName = $this->getField('location.region_name');
+        \assert(\is_string($regionName) || null === $regionName, 'Region name must be a string or null');
+
+        return $regionName;
     }
 
     /**
-     * Название региона страны по английски (анкета)
+     * Название региона страны по английски (анкета).
      *
-     * @return string|null
      * @example Moscow
      */
     public function getLocationRegionNameEnglish(): ?string
     {
-        return $this->getField('location.region_name_eng');
+        $regionNameEnglish = $this->getField('location.region_name_eng');
+        \assert(\is_string($regionNameEnglish) || null === $regionNameEnglish, 'Region name (english) must be a string or null');
+
+        return $regionNameEnglish;
     }
 
     /**
-     * Элемент массива данных о пользователе
+     * Значение массива (многомерного).
+     *
+     * @param string $key Ключ поля (например: `email` или `name.first` — вложенность оформляется точкой)
+     */
+    public static function getFieldFromArray(string $key, mixed $array): mixed
+    {
+        if ((bool) strpos($key, '.')) { // key.sub_key.sub_sub_key
+            [$key, $subKey] = explode('.', $key, 2);
+
+            if (\is_array($array) && isset($array[$key])) {
+                return static::getFieldFromArray($subKey, $array[$key]);
+            }
+
+            return null;
+        }
+
+        if (\is_array($array) && isset($array[$key])) {
+            return $array[$key];
+        }
+
+        return null;
+    }
+
+    /**
+     * Элемент массива данных о пользователе.
      *
      * @param string $key Ключ поля (например: email или name.first — вложенность оформляется точкой)
-     * @return mixed
      */
     protected function getField(string $key): mixed
     {
         return static::getFieldFromArray($key, $this->data);
-    }
-
-    /**
-     * Значение массива (многомерного)
-     *
-     * @param string $key Ключ поля (например: `email` или `name.first` — вложенность оформляется точкой)
-     * @param mixed[] $array
-     * @return mixed
-     */
-    public static function getFieldFromArray(string $key, ?array $array): mixed
-    {
-        if ((bool) strpos($key, '.')) { // key.subKey.subSubKey
-            list ($key, $subKey) = explode('.', $key, 2);
-            return isset($array[$key]) ? static::getFieldFromArray($subKey, $array[$key]) : null;
-        }
-
-        return isset($array[$key]) ? $array[$key] : null;
     }
 }

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Sept\OAuth2\Client\Provider;
 
@@ -9,7 +11,7 @@ use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Провайдер данных Первого сентября
+ * Провайдер данных Первого сентября.
  */
 class SeptemberFirstProvider extends GenericProvider
 {
@@ -18,53 +20,56 @@ class SeptemberFirstProvider extends GenericProvider
     /**
      * @var string Сервер аутентификации (Личный кабинет Первое сентября)
      */
-    const AUTH_BASE = 'https://my.1sept.ru';
+    public const string AUTH_BASE = 'https://my.1sept.ru';
 
     /**
      * @var string API Первое сентября
      */
-    const API_BASE = 'https://api.1sept.ru';
+    public const string API_BASE = 'https://api.1sept.ru';
 
     /**
      * @var string[] Разрешения (scopes) по умолчанию
      */
-    const SCOPES_DEFAULT = ['profile'];
+    public const array SCOPES_DEFAULT = ['profile'];
 
     /**
      * @var string Разделитель перечня запрашиваемых разрешений
      */
-    const SCOPES_SEPARATOR = ' ';
+    public const string SCOPES_SEPARATOR = ' ';
 
     /**
      * @var string Путь авторизации
      */
-    const AUTHORIZE_PATH = '/oauth/authorize';
+    public const string AUTHORIZE_PATH = '/oauth/authorize';
 
     /**
      * @var string Путь получения токена
      */
-    const ACCESS_TOKEN_PATH = '/oauth/access_token';
+    public const string ACCESS_TOKEN_PATH = '/oauth/access_token';
 
     /**
      * @var string Путь получения данных пользователя
      */
-    const USERINFO_PATH = '/2.0/userinfo';
+    public const string USERINFO_PATH = '/2.0/userinfo';
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param mixed[] $options
+     * @param mixed[]  $options
      * @param object[] $collaborators
      */
     public function __construct(array $options = [], array $collaborators = [])
     {
         $authBase = $options['authBase'] ?? static::AUTH_BASE;
-        $apiBase  = $options['apiBase']  ?? static::API_BASE;
+        \assert(\is_string($authBase), 'Option `authBase` must be a string');
+
+        $apiBase = $options['apiBase'] ?? static::API_BASE;
+        \assert(\is_string($apiBase), 'Option `apiBase` must be a string');
 
         $defaultOptions = [
-            'urlAuthorize' => $authBase.static::AUTHORIZE_PATH,
-            'urlAccessToken' => $apiBase.static::ACCESS_TOKEN_PATH,
-            'urlResourceOwnerDetails' => $apiBase.static::USERINFO_PATH,
+            'urlAuthorize' => $authBase . static::AUTHORIZE_PATH,
+            'urlAccessToken' => $apiBase . static::ACCESS_TOKEN_PATH,
+            'urlResourceOwnerDetails' => $apiBase . static::USERINFO_PATH,
             'scopes' => static::SCOPES_DEFAULT,
             'scopeSeparator' => static::SCOPES_SEPARATOR,
         ];
@@ -75,16 +80,14 @@ class SeptemberFirstProvider extends GenericProvider
     /**
      * Checks a provider response for errors.
      *
-     * @param ResponseInterface $response
      * @param mixed[]|string $data — Parsed response data
-     * @return void
      *
      * @throws IdentityProviderException
      */
     protected function checkResponse(ResponseInterface $response, $data): void
     {
-        if (isset($data['error'])) {
-            throw new IdentityProviderException($data['error']. (isset($data['message']) ? ': '.$data['message'] : ''), 0, $response);
+        if (isset($data['error']) && \is_string($data['error']) && '' !== $data['error']) {
+            throw new IdentityProviderException($data['error'] . ((isset($data['message']) && \is_string($data['message']) && '' !== $data['message']) ? ': ' . $data['message'] : ''), 0, $response);
         }
     }
 
@@ -92,8 +95,6 @@ class SeptemberFirstProvider extends GenericProvider
      * Generates a resource owner object from a successful resource owner details request.
      *
      * @param mixed[] $response
-     * @param AccessToken $token
-     * @return SeptemberFirstUser
      */
     protected function createResourceOwner(array $response, AccessToken $token): SeptemberFirstUser
     {
