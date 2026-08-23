@@ -7,7 +7,6 @@ namespace Sept\OAuth2\Client\Provider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Provider\GenericProvider;
 use League\OAuth2\Client\Token\AccessToken;
-use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -15,8 +14,6 @@ use Psr\Http\Message\ResponseInterface;
  */
 class SeptemberFirstProvider extends GenericProvider
 {
-    use BearerAuthorizationTrait;
-
     /**
      * @var string Сервер аутентификации (Личный кабинет Первое сентября)
      */
@@ -61,10 +58,16 @@ class SeptemberFirstProvider extends GenericProvider
     public function __construct(array $options = [], array $collaborators = [])
     {
         $authBase = $options['authBase'] ?? static::AUTH_BASE;
-        \assert(\is_string($authBase), 'Option `authBase` must be a string');
+        if (!\is_string($authBase) || '' === $authBase) {
+            throw new \InvalidArgumentException('Option `authBase` must be a non-empty string');
+        }
 
         $apiBase = $options['apiBase'] ?? static::API_BASE;
-        \assert(\is_string($apiBase), 'Option `apiBase` must be a string');
+        if (!\is_string($apiBase) || '' === $apiBase) {
+            throw new \InvalidArgumentException('Option `apiBase` must be a non-empty string');
+        }
+
+        unset($options['authBase'], $options['apiBase']);
 
         $defaultOptions = [
             'urlAuthorize' => $authBase . static::AUTHORIZE_PATH,
@@ -80,15 +83,40 @@ class SeptemberFirstProvider extends GenericProvider
     /**
      * Checks a provider response for errors.
      *
+     * Ошибкой считается любой HTTP-статус >= 400, а также «содержательное»
+     * поле `error` в теле ответа (непустая строка или непустой объект);
+     * ложные маркеры (`""`, `0`, `false`, `[]`) при успешном статусе ошибкой не являются.
+     *
      * @param mixed[]|string $data — Parsed response data
      *
      * @throws IdentityProviderException
      */
     protected function checkResponse(ResponseInterface $response, $data): void
     {
-        if (isset($data['error']) && \is_string($data['error']) && '' !== $data['error']) {
-            throw new IdentityProviderException($data['error'] . ((isset($data['message']) && \is_string($data['message']) && '' !== $data['message']) ? ': ' . $data['message'] : ''), 0, $response);
+        $statusCode = $response->getStatusCode();
+        $error = \is_array($data) ? ($data['error'] ?? null) : null;
+        $hasError = (\is_string($error) && '' !== $error) || (\is_array($error) && [] !== $error);
+
+        if ($statusCode < 400 && !$hasError) {
+            return;
         }
+
+        if (\is_string($error) && '' !== $error) {
+            $message = $error;
+        } elseif (\is_array($error) && [] !== $error) {
+            $detail = $error['message'] ?? $error['error_description'] ?? $error['description'] ?? $error['code'] ?? null;
+            $message = \is_scalar($detail) ? (string) $detail : (string) json_encode($error, JSON_UNESCAPED_UNICODE);
+        } elseif (\is_string($data) && '' !== $data) {
+            $message = $data;
+        } else {
+            $message = ('' !== $response->getReasonPhrase()) ? $response->getReasonPhrase() : 'Unexpected error response';
+        }
+
+        if (\is_array($data) && isset($data['message']) && \is_string($data['message']) && '' !== $data['message'] && $data['message'] !== $message) {
+            $message .= ': ' . $data['message'];
+        }
+
+        throw new IdentityProviderException($message, $statusCode, $data);
     }
 
     /**

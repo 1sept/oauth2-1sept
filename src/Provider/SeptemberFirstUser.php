@@ -8,10 +8,18 @@ use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 
 /**
  * Пользователь Первого сентября.
+ *
+ * Политика типов едина для всех геттеров: значение неожиданного типа
+ * деградирует в null (без исключений и без зависимости от zend.assertions).
  */
 class SeptemberFirstUser implements ResourceOwnerInterface
 {
     public const string AVATAR_BASE = 'https://avatar.1sept.ru';
+
+    /**
+     * @var string Формат даты рождения в ответе API
+     */
+    public const string BIRTHDAY_FORMAT = '!Y-m-d';
 
     /**
      * @var mixed[] Массив с данными о пользователе
@@ -43,8 +51,8 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getId(): string
     {
-        $id = $this->getField('id');
-        \assert(\is_string($id) && '' !== $id, 'ID must be a non-empty string');
+        $id = $this->getStringField('id');
+        \assert(null !== $id && '' !== $id, 'ID must be a non-empty string');
 
         return $id;
     }
@@ -57,14 +65,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getIdAlt(): array
     {
-        $altIds = $this->getField('id_alt') ?? [];
-        \assert(\is_array($altIds), 'Atl IDs list must be an array');
-        array_walk($altIds, static function ($id): void {
-            \assert(\is_string($id) && '' !== $id, 'Atl ID must be a non-empty string');
-        });
+        $altIds = $this->getArrayField('id_alt') ?? [];
 
-        /** @var string[] $altIds */
-        return $altIds;
+        return array_values(array_filter($altIds, static fn ($id): bool => \is_string($id) && '' !== $id));
     }
 
     /**
@@ -72,10 +75,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getLastName(): ?string
     {
-        $lastName = $this->getField('personal_name.surname');
-        \assert(\is_string($lastName) || null === $lastName, 'Last name must be a string or null');
-
-        return $lastName;
+        return $this->getStringField('personal_name.surname');
     }
 
     /**
@@ -83,10 +83,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getFirstName(): ?string
     {
-        $firstName = $this->getField('personal_name.name');
-        \assert(\is_string($firstName) || null === $firstName, 'First name must be a string or null');
-
-        return $firstName;
+        return $this->getStringField('personal_name.name');
     }
 
     /**
@@ -94,14 +91,12 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getMiddleName(): ?string
     {
-        $middleName = $this->getField('personal_name.patronymic');
-        \assert(\is_string($middleName) || null === $middleName, 'Middle name must be a string or null');
-
-        return $middleName;
+        return $this->getStringField('personal_name.patronymic');
     }
 
     /**
-     * Девичья фамилия.
+     * Девичья фамилия
+     * (текущая версия API не передаёт это поле, поэтому всегда возвращается null).
      */
     public function getMaidenName(): ?string
     {
@@ -113,10 +108,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getDisplayName(): ?string
     {
-        $displayName = $this->getField('display_name');
-        \assert(\is_string($displayName) || null === $displayName, 'Display name must be a string or null');
-
-        return $displayName;
+        return $this->getStringField('display_name');
     }
 
     /**
@@ -126,10 +118,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getSex(): ?string
     {
-        $sex = $this->getField('sex');
-        \assert((\is_string($sex) && \in_array($sex, ['male', 'female'], true)) || null === $sex, 'Sex must be a string or null');
+        $sex = $this->getStringField('sex');
 
-        return $sex;
+        return \in_array($sex, ['male', 'female'], true) ? $sex : null;
     }
 
     /**
@@ -137,10 +128,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getRegalia(): ?string
     {
-        $regalia = $this->getField('regalia');
-        \assert(\is_string($regalia) || null === $regalia, 'Regalia must be a string or null');
-
-        return $regalia;
+        return $this->getStringField('regalia');
     }
 
     /**
@@ -148,10 +136,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function isDied(): ?bool
     {
-        $isDied = $this->getField('is_died');
-        \assert(\is_bool($isDied) || null === $isDied, 'Death status must be a boolean or null');
-
-        return $isDied;
+        return $this->getBoolField('is_died');
     }
 
     /**
@@ -159,21 +144,30 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getEmail(): ?string
     {
-        $email = $this->getField('email');
-        \assert(\is_string($email) || null === $email, 'Email must be a string or null');
-
-        return $email;
+        return $this->getStringField('email');
     }
 
     /**
      * Дата рождения.
+     *
+     * Строка, не являющаяся датой формата BIRTHDAY_FORMAT
+     * (в том числе относительные даты вроде `now`), даёт null.
      */
     public function getBirthday(): ?\DateTime
     {
-        $birthday = $this->getField('birthday');
-        \assert(\is_string($birthday) || null === $birthday, 'Birthday must be a string or null');
+        $birthday = $this->getStringField('birthday');
+        if (null === $birthday || '' === $birthday) {
+            return null;
+        }
 
-        return null !== $birthday ? new \DateTime($birthday) : null;
+        $date = \DateTime::createFromFormat(static::BIRTHDAY_FORMAT, $birthday);
+        $errors = \DateTime::getLastErrors();
+
+        if (false === $date || (\is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
+            return null;
+        }
+
+        return $date;
     }
 
     /**
@@ -187,25 +181,21 @@ class SeptemberFirstUser implements ResourceOwnerInterface
             return null;
         }
 
-        $avatar = $this->getField('avatar');
-        \assert(\is_string($avatar) || null === $avatar, 'Avatar must be a string or null');
-
-        return $avatar;
+        return $this->getStringField('avatar');
     }
 
     /**
      * URL аватарки определённого размера (<img src="…" width="size" height="size">).
      *
-     * @param int  $size            Размер от 1 до 1990 ($size x $size — квадрат)
+     * @param int  $size            Размер от 1 до 1990 ($size x $size — квадрат); при $size <= 0 сегмент размера (и множитель) опускается
      * @param int  $ratioMultiplier Множитель разрешения картинки: 1 (по умолчанию), 2 или 3
      * @param bool $addVersion      Использовать версию аватарки для улучшенного кэширования
      */
     public function getAvatarSizeUrl(int $size, int $ratioMultiplier = 1, bool $addVersion = true, string $format = 'webp'): ?string
     {
-        $ratio = ($ratioMultiplier > 1) ? '@' . $ratioMultiplier . 'x' : '';
-        $url = static::AVATAR_BASE . '/' . $this->getId() . (((bool) $size) ? '.' : '') . $size . $ratio . '.' . $format;
-
-        return $url . ($addVersion ? $this->getAvatarVersionQuery() : '');
+        return static::AVATAR_BASE . '/' . $this->getId()
+            . static::avatarSizeSegment($size, $ratioMultiplier) . '.' . $format
+            . ($addVersion ? $this->getAvatarVersionQuery() : '');
     }
 
     /**
@@ -216,13 +206,19 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAvatarSetSizeUrl(int $size, bool $addVersion = true, string $format = 'webp'): string
     {
-        return $this->getAvatarSizeUrl($size, 1, $addVersion, $format) . ' 1x, '
-            . $this->getAvatarSizeUrl($size, 2, $addVersion, $format) . ' 2x, '
-            . $this->getAvatarSizeUrl($size, 3, $addVersion, $format) . ' 3x';
+        $prefix = static::AVATAR_BASE . '/' . $this->getId();
+        $suffix = '.' . $format . ($addVersion ? $this->getAvatarVersionQuery() : '');
+
+        $set = [];
+        foreach ([1, 2, 3] as $ratio) {
+            $set[] = $prefix . static::avatarSizeSegment($size, $ratio) . $suffix . ' ' . $ratio . 'x';
+        }
+
+        return implode(', ', $set);
     }
 
     /**
-     * URL аватарки c максимальным размером
+     * URL аватарки c максимальным размером.
      *
      * @param bool $addVersion Использовать версию аватарки для улучшенного кэширования
      *
@@ -230,12 +226,10 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAvatarMaxUrl(bool $addVersion = false): ?string
     {
-        $avatar = $this->getField('avatar_max');
-        if (null === $avatar) {
+        $avatar = $this->getStringField('avatar_max');
+        if (null === $avatar || '' === $avatar) {
             return null;
         }
-
-        \assert(\is_string($avatar), 'Avatar must be a string or null');
 
         return $avatar . ($addVersion ? $this->getAvatarVersionQuery() : '');
     }
@@ -248,17 +242,17 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     public function getAvatarVersion(): int|string|null
     {
         $version = $this->getField('avatar_version');
-        \assert(\is_int($version) || \is_string($version) || null === $version, 'Avatar version must be an integer, string or null');
 
-        return $version;
+        return \is_int($version) || \is_string($version) ? $version : null;
     }
 
     /**
-     * Является ли аватарка заглушкой.
+     * Является ли аватарка заглушкой
+     * (null — API не передал признак).
      */
     public function isDefaultAvatar(): ?bool
     {
-        return (bool) $this->getField('avatar_default');
+        return $this->getBoolField('avatar_default');
     }
 
     /**
@@ -268,14 +262,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAvatarVersionQuery(): string
     {
-        $query = '';
-
         $version = $this->getAvatarVersion();
-        if (null !== $version) {
-            $query .= '?v=' . $version;
-        }
 
-        return $query;
+        return null !== $version ? '?v=' . rawurlencode((string) $version) : '';
     }
 
     /**
@@ -285,10 +274,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getProfileUrl(): ?string
     {
-        $link = $this->getField('link');
-        \assert(\is_string($link), 'Link must be a string or null');
-
-        return $link;
+        return $this->getStringField('link');
     }
 
     /**
@@ -307,11 +293,8 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getPhones(): ?array
     {
-        $phones = $this->getField('phones');
-        \assert(\is_array($phones) || null === $phones, 'Phones must be an array or null');
-
-        /** @var array<int, array<string, string>>|null $phones */
-        return $phones;
+        // @phpstan-ignore return.type (API гарантирует форму списка телефонов)
+        return $this->getArrayField('phones');
     }
 
     /**
@@ -321,10 +304,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getSnils(): ?string
     {
-        $snils = $this->getField('passport.snils');
-        \assert(\is_string($snils), 'SNILS must be a string or null');
-
-        return $snils;
+        return $this->getStringField('passport.snils');
     }
 
     /**
@@ -334,10 +314,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getLocale(): ?string
     {
-        $locale = $this->getField('locale');
-        \assert(\is_string($locale), 'Locale must be a string or null');
-
-        return $locale;
+        return $this->getStringField('locale');
     }
 
     /**
@@ -347,10 +324,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getTimezone(): ?string
     {
-        $timezone = $this->getField('timezone');
-        \assert(\is_string($timezone), 'Timezone must be a string or null');
-
-        return $timezone;
+        return $this->getStringField('timezone');
     }
 
     /**
@@ -360,10 +334,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressID(): ?int
     {
-        $id = $this->getField('address.id');
-        \assert(\is_int($id) || null === $id, 'ID must be an integer or null');
-
-        return $id;
+        return $this->getIntField('address.id');
     }
 
     /**
@@ -373,10 +344,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressCountryID(): ?string
     {
-        $countryId = $this->getField('address.country_id');
-        \assert(\is_string($countryId) || null === $countryId, 'Country ID must be a string or null');
-
-        return $countryId;
+        return $this->getStringField('address.country_id');
     }
 
     /**
@@ -386,10 +354,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressRegionID(): ?string
     {
-        $regionId = $this->getField('address.region_id');
-        \assert(\is_string($regionId) || null === $regionId, 'Region ID must be a string or null');
-
-        return $regionId;
+        return $this->getStringField('address.region_id');
     }
 
     /**
@@ -399,10 +364,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressPostalcode(): ?string
     {
-        $postalCode = $this->getField('address.postal_code');
-        \assert(\is_string($postalCode) || null === $postalCode, 'Postal code must be a string or null');
-
-        return $postalCode;
+        return $this->getStringField('address.postal_code');
     }
 
     /**
@@ -412,10 +374,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressArea(): ?string
     {
-        $area = $this->getField('address.area');
-        \assert(\is_string($area) || null === $area, 'Area must be a string or null');
-
-        return $area;
+        return $this->getStringField('address.area');
     }
 
     /**
@@ -425,10 +384,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressCity(): ?string
     {
-        $city = $this->getField('address.city');
-        \assert(\is_string($city) || null === $city, 'City must be a string or null');
-
-        return $city;
+        return $this->getStringField('address.city');
     }
 
     /**
@@ -438,10 +394,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressStreet(): ?string
     {
-        $street = $this->getField('address.street');
-        \assert(\is_string($street) || null === $street, 'Street must be a string or null');
-
-        return $street;
+        return $this->getStringField('address.street');
     }
 
     /**
@@ -451,10 +404,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressHouse(): ?string
     {
-        $house = $this->getField('address.house');
-        \assert(\is_string($house) || null === $house, 'House must be a string or null');
-
-        return $house;
+        return $this->getStringField('address.house');
     }
 
     /**
@@ -464,10 +414,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressBuilding(): ?string
     {
-        $building = $this->getField('address.building');
-        \assert(\is_string($building) || null === $building, 'Building must be a string or null');
-
-        return $building;
+        return $this->getStringField('address.building');
     }
 
     /**
@@ -477,10 +424,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressFlat(): ?string
     {
-        $flat = $this->getField('address.flat');
-        \assert(\is_string($flat) || null === $flat, 'Flat must be a string or null');
-
-        return $flat;
+        return $this->getStringField('address.flat');
     }
 
     /**
@@ -490,7 +434,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function isAddressGeneralDelivery(): bool
     {
-        return (bool) $this->getField('address.general_delivery');
+        return $this->getBoolField('address.general_delivery') ?? false;
     }
 
     /**
@@ -500,10 +444,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressPostalBox(): ?string
     {
-        $postalBox = $this->getField('address.postal_box');
-        \assert(\is_string($postalBox) || null === $postalBox, 'Postal box must be a string or null');
-
-        return $postalBox;
+        return $this->getStringField('address.postal_box');
     }
 
     /**
@@ -513,10 +454,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressOrganization(): ?string
     {
-        $organization = $this->getField('address.organization');
-        \assert(\is_string($organization) || null === $organization, 'Organization must be a string or null');
-
-        return $organization;
+        return $this->getStringField('address.organization');
     }
 
     /**
@@ -526,10 +464,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getAddressInline(): ?string
     {
-        $addressInline = $this->getField('address.inline');
-        \assert(\is_string($addressInline) || null === $addressInline, 'Inline must be a string or null');
-
-        return $addressInline;
+        return $this->getStringField('address.inline');
     }
 
     /**
@@ -539,10 +474,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getLocationCountryID(): ?string
     {
-        $countryId = $this->getField('location.country_id');
-        \assert(\is_string($countryId) || null === $countryId, 'Country ID must be a string or null');
-
-        return $countryId;
+        return $this->getStringField('location.country_id');
     }
 
     /**
@@ -552,10 +484,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getLocationCountryName(): ?string
     {
-        $countryName = $this->getField('location.country_name');
-        \assert(\is_string($countryName) || null === $countryName, 'Country name must be a string or null');
-
-        return $countryName;
+        return $this->getStringField('location.country_name');
     }
 
     /**
@@ -565,10 +494,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getLocationCountryNameEnglish(): ?string
     {
-        $countryNameEnglish = $this->getField('location.country_name_eng');
-        \assert(\is_string($countryNameEnglish) || null === $countryNameEnglish, 'Country name (english) must be a string or null');
-
-        return $countryNameEnglish;
+        return $this->getStringField('location.country_name_eng');
     }
 
     /**
@@ -578,10 +504,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getLocationRegionID(): ?string
     {
-        $regionId = $this->getField('location.region_id');
-        \assert(\is_string($regionId) || null === $regionId, 'Region ID must be a string or null');
-
-        return $regionId;
+        return $this->getStringField('location.region_id');
     }
 
     /**
@@ -591,10 +514,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getLocationRegionName(): ?string
     {
-        $regionName = $this->getField('location.region_name');
-        \assert(\is_string($regionName) || null === $regionName, 'Region name must be a string or null');
-
-        return $regionName;
+        return $this->getStringField('location.region_name');
     }
 
     /**
@@ -604,10 +524,7 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public function getLocationRegionNameEnglish(): ?string
     {
-        $regionNameEnglish = $this->getField('location.region_name_eng');
-        \assert(\is_string($regionNameEnglish) || null === $regionNameEnglish, 'Region name (english) must be a string or null');
-
-        return $regionNameEnglish;
+        return $this->getStringField('location.region_name_eng');
     }
 
     /**
@@ -617,21 +534,28 @@ class SeptemberFirstUser implements ResourceOwnerInterface
      */
     public static function getFieldFromArray(string $key, mixed $array): mixed
     {
-        if ((bool) strpos($key, '.')) { // key.sub_key.sub_sub_key
-            [$key, $subKey] = explode('.', $key, 2);
-
-            if (\is_array($array) && isset($array[$key])) {
-                return static::getFieldFromArray($subKey, $array[$key]);
+        $value = $array;
+        foreach (explode('.', $key) as $part) {
+            if (!\is_array($value) || !isset($value[$part])) {
+                return null;
             }
 
-            return null;
+            $value = $value[$part];
         }
 
-        if (\is_array($array) && isset($array[$key])) {
-            return $array[$key];
+        return $value;
+    }
+
+    /**
+     * Сегмент размера аватарки (`.150`, `.150@2x` или пустая строка при $size <= 0).
+     */
+    protected static function avatarSizeSegment(int $size, int $ratioMultiplier): string
+    {
+        if ($size <= 0) {
+            return '';
         }
 
-        return null;
+        return '.' . $size . (($ratioMultiplier > 1) ? '@' . $ratioMultiplier . 'x' : '');
     }
 
     /**
@@ -642,5 +566,50 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     protected function getField(string $key): mixed
     {
         return static::getFieldFromArray($key, $this->data);
+    }
+
+    /**
+     * Строковое поле: строка либо null.
+     */
+    protected function getStringField(string $key): ?string
+    {
+        $value = $this->getField($key);
+
+        return \is_string($value) ? $value : null;
+    }
+
+    /**
+     * Целочисленное поле: int либо null (числовая строка приводится к int).
+     */
+    protected function getIntField(string $key): ?int
+    {
+        $value = $this->getField($key);
+        if (\is_int($value)) {
+            return $value;
+        }
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Булево поле: null, если поле отсутствует, иначе приведение к bool.
+     */
+    protected function getBoolField(string $key): ?bool
+    {
+        $value = $this->getField($key);
+
+        return null === $value ? null : (bool) $value;
+    }
+
+    /**
+     * Поле-массив: массив либо null.
+     *
+     * @return mixed[]|null
+     */
+    protected function getArrayField(string $key): ?array
+    {
+        $value = $this->getField($key);
+
+        return \is_array($value) ? $value : null;
     }
 }
