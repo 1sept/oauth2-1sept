@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.13 — 2026-09-03
+
+### Fixed
+
+- `checkResponse()` no longer puts a raw non-JSON response body into the
+  exception message: when the body is an HTML page (a `502 Bad Gateway` /
+  `503 Service Unavailable` error page produced by the reverse proxy while the
+  upstream is down) the message is now the status line (`HTTP 502 Bad
+  Gateway`). A plain-text body is still used as the message, trimmed and
+  truncated to 500 characters. The full body remains available through
+  `getResponseBody()`.
+
 ## 1.4.12 — 2026-08-24
 
 ### Breaking changes

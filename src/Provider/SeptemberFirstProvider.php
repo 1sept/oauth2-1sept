@@ -50,6 +50,11 @@ class SeptemberFirstProvider extends GenericProvider
     public const string USERINFO_PATH = '/2.0/userinfo';
 
     /**
+     * @var int Предельная длина текста ошибки, взятого из тела ответа
+     */
+    private const int ERROR_MESSAGE_MAX_LENGTH = 500;
+
+    /**
      * Constructor.
      *
      * @param mixed[]  $options
@@ -87,6 +92,10 @@ class SeptemberFirstProvider extends GenericProvider
      * поле `error` в теле ответа (непустая строка или непустой объект);
      * ложные маркеры (`""`, `0`, `false`, `[]`) при успешном статусе ошибкой не являются.
      *
+     * Тело ответа попадает в текст исключения, только если это осмысленный текст ошибки:
+     * при аварии на стороне сервера (502/503 от nginx) тело — это HTML-страница,
+     * и в сообщение вместо неё идёт статус ответа. Целиком тело остаётся в `getResponseBody()`.
+     *
      * @param mixed[]|string $data — Parsed response data
      *
      * @throws IdentityProviderException
@@ -106,10 +115,11 @@ class SeptemberFirstProvider extends GenericProvider
         } elseif (\is_array($error) && [] !== $error) {
             $detail = $error['message'] ?? $error['error_description'] ?? $error['description'] ?? $error['code'] ?? null;
             $message = \is_scalar($detail) ? (string) $detail : (string) json_encode($error, JSON_UNESCAPED_UNICODE);
-        } elseif (\is_string($data) && '' !== $data) {
-            $message = $data;
+        } elseif (\is_string($data) && '' !== trim($data) && !str_starts_with(ltrim($data), '<')) {
+            $message = mb_substr(trim($data), 0, self::ERROR_MESSAGE_MAX_LENGTH);
         } else {
-            $message = ('' !== $response->getReasonPhrase()) ? $response->getReasonPhrase() : 'Unexpected error response';
+            $reasonPhrase = $response->getReasonPhrase();
+            $message = 'HTTP ' . $statusCode . ('' !== $reasonPhrase ? ' ' . $reasonPhrase : '');
         }
 
         if (\is_array($data) && isset($data['message']) && \is_string($data['message']) && '' !== $data['message'] && $data['message'] !== $message) {

@@ -134,27 +134,61 @@ final class ProviderTest extends TestCase
         $this->checkResponse($this->makeProvider(), new Response(200), ['error' => 'invalid_request']);
     }
 
-    public function testNonJsonErrorResponseThrowsWithBodyPreserved(): void
+    public function testHtmlErrorResponseReportsStatusAndPreservesBody(): void
     {
-        $html = '<html>Forbidden</html>';
+        $html = "<html>\n<head><title>502 Bad Gateway</title></head>\n</html>\n";
 
         try {
-            $this->checkResponse($this->makeProvider(), new Response(403, [], $html), $html);
+            $this->checkResponse($this->makeProvider(), new Response(502, [], $html), $html);
             self::fail('Expected IdentityProviderException');
         } catch (IdentityProviderException $e) {
-            self::assertSame($html, $e->getMessage());
-            self::assertSame(403, $e->getCode());
+            self::assertSame('HTTP 502 Bad Gateway', $e->getMessage());
+            self::assertSame(502, $e->getCode());
             self::assertSame($html, $e->getResponseBody());
         }
     }
 
-    public function testEmptyErrorBodyFallsBackToReasonPhrase(): void
+    public function testPlainTextErrorResponseIsUsedAsMessage(): void
+    {
+        $text = '  Rate limit exceeded  ';
+
+        try {
+            $this->checkResponse($this->makeProvider(), new Response(429, [], $text), $text);
+            self::fail('Expected IdentityProviderException');
+        } catch (IdentityProviderException $e) {
+            self::assertSame('Rate limit exceeded', $e->getMessage());
+            self::assertSame(429, $e->getCode());
+        }
+    }
+
+    public function testLongErrorBodyIsTruncated(): void
+    {
+        $text = str_repeat('я', 900);
+
+        try {
+            $this->checkResponse($this->makeProvider(), new Response(400, [], $text), $text);
+            self::fail('Expected IdentityProviderException');
+        } catch (IdentityProviderException $e) {
+            self::assertSame(500, mb_strlen($e->getMessage()));
+            self::assertSame($text, $e->getResponseBody());
+        }
+    }
+
+    public function testEmptyErrorBodyFallsBackToStatusLine(): void
     {
         $this->expectException(IdentityProviderException::class);
-        $this->expectExceptionMessage('Service Unavailable');
+        $this->expectExceptionMessage('HTTP 503 Service Unavailable');
         $this->expectExceptionCode(503);
 
         $this->checkResponse($this->makeProvider(), new Response(503), '');
+    }
+
+    public function testBlankErrorBodyFallsBackToStatusLine(): void
+    {
+        $this->expectException(IdentityProviderException::class);
+        $this->expectExceptionMessage('HTTP 500 Internal Server Error');
+
+        $this->checkResponse($this->makeProvider(), new Response(500), "   \n  ");
     }
 
     public function testCreateResourceOwner(): void
