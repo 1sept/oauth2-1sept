@@ -96,6 +96,9 @@ class SeptemberFirstProvider extends GenericProvider
      * при аварии на стороне сервера (502/503 от nginx) тело — это HTML-страница,
      * и в сообщение вместо неё идёт статус ответа. Целиком тело остаётся в `getResponseBody()`.
      *
+     * К краткому коду ошибки (`invalid_grant` и подобным) добавляется уточнение причины
+     * из `hint` / `error_description` / `message`, если оно есть.
+     *
      * @param mixed[]|string $data — Parsed response data
      *
      * @throws IdentityProviderException
@@ -122,11 +125,35 @@ class SeptemberFirstProvider extends GenericProvider
             $message = 'HTTP ' . $statusCode . ('' !== $reasonPhrase ? ' ' . $reasonPhrase : '');
         }
 
-        if (\is_array($data) && isset($data['message']) && \is_string($data['message']) && '' !== $data['message'] && $data['message'] !== $message) {
-            $message .= ': ' . $data['message'];
+        $detail = \is_array($data) ? self::extractErrorDetail($data) : null;
+        if (null !== $detail && $detail !== $message) {
+            $message .= ': ' . $detail;
         }
 
         throw new IdentityProviderException($message, $statusCode, $data);
+    }
+
+    /**
+     * Уточнение причины ошибки из тела ответа.
+     *
+     * league/oauth2-server отдаёт рядом с `error` общее описание типа ошибки
+     * (`error_description`) и конкретную причину (`hint`: код авторизации просрочен,
+     * отозван, не расшифровывается). Без них в журнале остаётся только `invalid_grant`,
+     * по которому невозможно отличить повторное использование кода от истёкшего срока.
+     *
+     * @param mixed[] $data — Parsed response data
+     */
+    private static function extractErrorDetail(array $data): ?string
+    {
+        foreach (['hint', 'error_description', 'message'] as $key) {
+            $value = $data[$key] ?? null;
+
+            if (\is_string($value) && '' !== trim($value)) {
+                return mb_substr(trim($value), 0, self::ERROR_MESSAGE_MAX_LENGTH);
+            }
+        }
+
+        return null;
     }
 
     /**

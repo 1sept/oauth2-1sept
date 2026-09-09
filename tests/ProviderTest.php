@@ -113,6 +113,62 @@ final class ProviderTest extends TestCase
         }
     }
 
+    public function testHintIsAppendedToShortErrorCode(): void
+    {
+        $data = [
+            'error' => 'invalid_grant',
+            'error_description' => 'The provided authorization grant (e.g., authorization code, resource owner credentials) or refresh token is invalid, expired, revoked.',
+            'hint' => 'Authorization code has been revoked',
+        ];
+
+        try {
+            $this->checkResponse($this->makeProvider(), new Response(400), $data);
+            self::fail('Expected IdentityProviderException');
+        } catch (IdentityProviderException $e) {
+            self::assertSame('invalid_grant: Authorization code has been revoked', $e->getMessage());
+            self::assertSame($data, $e->getResponseBody());
+        }
+    }
+
+    public function testErrorDescriptionIsAppendedWhenHintIsAbsent(): void
+    {
+        try {
+            $this->checkResponse($this->makeProvider(), new Response(401), [
+                'error' => 'invalid_client',
+                'error_description' => 'Client authentication failed',
+            ]);
+            self::fail('Expected IdentityProviderException');
+        } catch (IdentityProviderException $e) {
+            self::assertSame('invalid_client: Client authentication failed', $e->getMessage());
+        }
+    }
+
+    public function testDetailRepeatingTheErrorCodeIsNotDuplicated(): void
+    {
+        try {
+            $this->checkResponse($this->makeProvider(), new Response(400), [
+                'error' => 'invalid_grant',
+                'hint' => 'invalid_grant',
+            ]);
+            self::fail('Expected IdentityProviderException');
+        } catch (IdentityProviderException $e) {
+            self::assertSame('invalid_grant', $e->getMessage());
+        }
+    }
+
+    public function testOverlongDetailIsTruncated(): void
+    {
+        try {
+            $this->checkResponse($this->makeProvider(), new Response(400), [
+                'error' => 'invalid_grant',
+                'hint' => str_repeat('я', 700),
+            ]);
+            self::fail('Expected IdentityProviderException');
+        } catch (IdentityProviderException $e) {
+            self::assertSame('invalid_grant: ' . str_repeat('я', 500), $e->getMessage());
+        }
+    }
+
     public function testStructuredErrorObjectYieldsReadableMessage(): void
     {
         $data = ['error' => ['code' => 401, 'message' => 'invalid_token']];

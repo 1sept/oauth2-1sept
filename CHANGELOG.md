@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.15 — 2026-09-09
+
+### Changed
+
+- `checkResponse()` now appends the reason behind a short OAuth error code to the
+  exception message, taken from `hint`, `error_description` or `message`
+  (in that order). The authorization server (league/oauth2-server) answers a
+  reused, revoked or expired authorization code with a bare
+  `{"error": "invalid_grant"}` plus a `hint` such as `Authorization code has
+  been revoked`; previously only `invalid_grant` reached the log, which made the
+  actual cause indistinguishable. The detail is trimmed and truncated to 500
+  characters; `message` keeps working as before.
+
 ## 1.4.13 — 2026-09-03
 
 ### Fixed
