@@ -134,6 +134,16 @@ class SeptemberFirstProvider extends GenericProvider
     }
 
     /**
+     * Generates a resource owner object from a successful resource owner details request.
+     *
+     * @param mixed[] $response
+     */
+    protected function createResourceOwner(array $response, AccessToken $token): SeptemberFirstUser
+    {
+        return new SeptemberFirstUser($response);
+    }
+
+    /**
      * Уточнение причины ошибки из тела ответа.
      *
      * league/oauth2-server отдаёт рядом с `error` общее описание типа ошибки
@@ -154,15 +164,5 @@ class SeptemberFirstProvider extends GenericProvider
         }
 
         return null;
-    }
-
-    /**
-     * Generates a resource owner object from a successful resource owner details request.
-     *
-     * @param mixed[] $response
-     */
-    protected function createResourceOwner(array $response, AccessToken $token): SeptemberFirstUser
-    {
-        return new SeptemberFirstUser($response);
     }
 }
