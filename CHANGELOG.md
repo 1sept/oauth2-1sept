@@ -10,6 +10,16 @@
   only when the `citizenship` scope is requested; without it both getters
   return `null`.
 
+## 1.4.16 — 2026-09-17
+
+### Changed
+
+- Development only: `guzzlehttp/psr7` in `require-dev` moved from `^2.7` to
+  `^3.0`, and CI now runs on PHP 8.5 only — the PHPStan and php-cs-fixer steps
+  are no longer pinned to the 8.4 matrix entry.
+- Method order in `SeptemberFirstProvider` was fixed to satisfy php-cs-fixer; no
+  behavior changed.
+
 ## 1.4.15 — 2026-09-09
 
 ### Changed
