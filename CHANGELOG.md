@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.17 — 2026-10-27
+
+### Added
+
+- `SeptemberFirstUser::getCitizenshipCountryID()` and
+  `getCitizenshipCountryName()` return `citizenship.country_id` and
+  `citizenship.country_name` from `/users/me`. The API includes these fields
+  only when the `citizenship` scope is requested; without it both getters
+  return `null`.
+
 ## 1.4.15 — 2026-09-09
 
 ### Changed
