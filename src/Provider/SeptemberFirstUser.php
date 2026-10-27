@@ -348,6 +348,26 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
+     * ID страны гражданства (scope `citizenship`).
+     *
+     * @example RU
+     */
+    public function getCitizenshipCountryID(): ?string
+    {
+        return $this->getStringField('citizenship.country_id');
+    }
+
+    /**
+     * Название страны гражданства (scope `citizenship`).
+     *
+     * @example Россия
+     */
+    public function getCitizenshipCountryName(): ?string
+    {
+        return $this->getStringField('citizenship.country_name');
+    }
+
+    /**
      * ID региона страны адреса.
      *
      * @example MOW
