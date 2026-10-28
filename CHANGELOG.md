@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.5.0 — 2026-10-28
+
+### Added
+
+- `SeptemberFirstUser::getCitizenshipCountryID()` and
+  `getCitizenshipCountryName()` (`citizenship.country_id` /
+  `citizenship.country_name` from `/users/me`, present only with the
+  `citizenship` scope). A minor version for the new public API; the methods
+  themselves went out ahead of it in 1.4.17.
+
+### Changed
+
+- The `getSnils()` docblock now documents the canonical 11-digit form
+  (`12345678901`, leading zero and checksum included) instead of the dashed
+  one. No behavior change.
+
 ## 1.4.17 — 2026-10-27
 
 ### Added
