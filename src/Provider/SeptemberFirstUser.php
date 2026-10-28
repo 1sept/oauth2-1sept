@@ -298,9 +298,9 @@ class SeptemberFirstUser implements ResourceOwnerInterface
     }
 
     /**
-     * СНИЛС
+     * СНИЛС — канонические 11 цифр (ведущий ноль + контрольная сумма)
      *
-     * @example 123-456-789 01
+     * @example 12345678901
      */
     public function getSnils(): ?string
     {
